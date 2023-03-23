@@ -1,0 +1,10 @@
+[user]
+	name = limonadev
+	email = limonadev@gmail.com
+
+[includeIf "gitdir:/home/limonadev/Code/Tul/"]
+  path = /home/limonadev/Code/Tul/.gitconfig-tul
+[safe]
+	directory = /opt/flutter
+[credential]
+	helper = store
