@@ -37,89 +37,7 @@ log "🔁 Updating Homebrew..."
 brew update
 
 # -------------------------------------
-# 3. Fonts (MesloLGS Nerd Font)
-# -------------------------------------
-log "🔤 Installing MesloLGS Nerd Font for Powerlevel10k..."
-brew install font-meslo-for-powerlevel10k
-
-# -------------------------------------
-# 4. Install CLI Tools & Casks
-# -------------------------------------
-install_if_missing() {
-    if ! brew list "$1" &>/dev/null && ! brew list --cask "$1" &>/dev/null; then
-        log "📦 Installing $1..."
-        brew install "$1" || brew install --cask "$1"
-    else
-        log "✅ $1 already installed."
-    fi
-}
-
-# CLI tools
-install_if_missing openjdk@17
-install_if_missing nvm
-brew tap leoafarias/fvm
-install_if_missing fvm
-
-# GUI apps
-# Check if Google Chrome is installed
-if [ ! -d "/Applications/Google Chrome.app" ]; then
-    echo "Google Chrome not found. Installing..."
-    brew install --cask google-chrome
-else
-    echo "Google Chrome is already installed."
-fi
-
-# Check if Visual Studio Code is installed
-if [ ! -d "/Applications/Visual Studio Code.app" ]; then
-    echo "Visual Studio Code not found. Installing..."
-    brew install --cask visual-studio-code
-else
-    echo "Visual Studio Code is already installed."
-fi
-
-# -------------------------------------
-# 4. Setup NVM
-# -------------------------------------
-log "📂 Ensuring NVM directory exists..."
-mkdir -p ~/.nvm
-
-# -------------------------------------
-# 5. Oh My Zsh
-# -------------------------------------
-log "💻 Checking Oh My Zsh..."
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    export RUNZSH=no
-    log "📥 Installing Oh My Zsh..."
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-else
-    log "✅ Oh My Zsh already installed."
-fi
-
-# -------------------------------------
-# 6. Powerlevel10k
-# -------------------------------------
-log "✨ Installing Powerlevel10k theme..."
-if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" ]; then
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
-        ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-else
-    log "✅ Powerlevel10k already installed."
-fi
-
-# -------------------------------------
-# 7. Oh My Zsh Plugins
-# -------------------------------------
-log "🔌 Installing Zsh plugins..."
-plugins_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
-
-[[ -d "$plugins_dir/zsh-syntax-highlighting" ]] || \
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$plugins_dir/zsh-syntax-highlighting"
-
-[[ -d "$plugins_dir/zsh-autosuggestions" ]] || \
-    git clone https://github.com/zsh-users/zsh-autosuggestions.git "$plugins_dir/zsh-autosuggestions"
-
-# -------------------------------------
-# 8. Generate .zshrc
+# 3. Generate .zshrc
 # -------------------------------------
 log "⚙️ Writing ~/.zshrc..."
 cat <<EOF > ~/.zshrc
@@ -186,6 +104,88 @@ export PATH="\$JAVA_HOME/bin:\$PATH"
 # Uncomment after Android Studio is installed
 # export PATH=$PATH:/Users/enigma/Library/Android/sdk/platform-tools/
 EOF
+
+# -------------------------------------
+# 4. Fonts (MesloLGS Nerd Font)
+# -------------------------------------
+log "🔤 Installing MesloLGS Nerd Font for Powerlevel10k..."
+brew install font-meslo-for-powerlevel10k
+
+# -------------------------------------
+# 5. Install CLI Tools & Casks
+# -------------------------------------
+install_if_missing() {
+    if ! brew list "$1" &>/dev/null && ! brew list --cask "$1" &>/dev/null; then
+        log "📦 Installing $1..."
+        brew install "$1" || brew install --cask "$1"
+    else
+        log "✅ $1 already installed."
+    fi
+}
+
+# CLI tools
+install_if_missing openjdk@17
+install_if_missing nvm
+brew tap leoafarias/fvm
+install_if_missing fvm
+
+# GUI apps
+# Check if Google Chrome is installed
+if [ ! -d "/Applications/Google Chrome.app" ]; then
+    echo "Google Chrome not found. Installing..."
+    brew install --cask google-chrome
+else
+    echo "Google Chrome is already installed."
+fi
+
+# Check if Visual Studio Code is installed
+if [ ! -d "/Applications/Visual Studio Code.app" ]; then
+    echo "Visual Studio Code not found. Installing..."
+    brew install --cask visual-studio-code
+else
+    echo "Visual Studio Code is already installed."
+fi
+
+# -------------------------------------
+# 6. Setup NVM
+# -------------------------------------
+log "📂 Ensuring NVM directory exists..."
+mkdir -p ~/.nvm
+
+# -------------------------------------
+# 7. Oh My Zsh
+# -------------------------------------
+log "💻 Checking Oh My Zsh..."
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    export RUNZSH=no
+    log "📥 Installing Oh My Zsh..."
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+else
+    log "✅ Oh My Zsh already installed."
+fi
+
+# -------------------------------------
+# 8. Powerlevel10k
+# -------------------------------------
+log "✨ Installing Powerlevel10k theme..."
+if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" ]; then
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
+        ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+else
+    log "✅ Powerlevel10k already installed."
+fi
+
+# -------------------------------------
+# 9. Oh My Zsh Plugins
+# -------------------------------------
+log "🔌 Installing Zsh plugins..."
+plugins_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
+
+[[ -d "$plugins_dir/zsh-syntax-highlighting" ]] || \
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$plugins_dir/zsh-syntax-highlighting"
+
+[[ -d "$plugins_dir/zsh-autosuggestions" ]] || \
+    git clone https://github.com/zsh-users/zsh-autosuggestions.git "$plugins_dir/zsh-autosuggestions"
 
 log "✅ Setup complete."
 log "📝 Please change your terminal font to 'MesloLGS NF' manually."
