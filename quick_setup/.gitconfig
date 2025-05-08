@@ -1,0 +1,5 @@
+[user]
+	name = limonadev
+	email = limonadev@gmail.com
+[includeIf "gitdir:/Users/enigma/Code/Work/"]
+  path = /Users/enigma/Code/Work/.gitconfig_lineleap

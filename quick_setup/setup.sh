@@ -1,0 +1,180 @@
+#!/bin/bash
+
+set -e
+
+log() { echo -e "\033[1;32m$1\033[0m"; }
+
+# -------------------------------------
+# 1. Xcode Command Line Tools
+# -------------------------------------
+log "🔧 Checking Xcode Command Line Tools..."
+if ! xcode-select -p &>/dev/null; then
+    log "🛠 Installing Xcode Command Line Tools..."
+    xcode-select --install
+
+    log "⌛ Waiting for installation to complete..."
+    until xcode-select -p &>/dev/null; do
+        sleep 5
+    done
+    log "✅ Xcode Command Line Tools installed."
+else
+    log "✅ Xcode Command Line Tools already installed."
+fi
+
+# -------------------------------------
+# 2. Homebrew
+# -------------------------------------
+log "🍺 Checking Homebrew..."
+if ! command -v brew &>/dev/null; then
+    log "📥 Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    eval "$(/opt/homebrew/bin/brew shellenv)"  # for Apple Silicon
+else
+    log "✅ Homebrew already installed."
+fi
+
+log "🔁 Updating Homebrew..."
+brew update
+
+# -------------------------------------
+# 3. Fonts (MesloLGS Nerd Font)
+# -------------------------------------
+log "🔤 Installing MesloLGS Nerd Font for Powerlevel10k..."
+brew tap homebrew/cask-fonts
+brew install --cask font-meslo-lg-nerd-font
+
+# -------------------------------------
+# 4. Install CLI Tools & Casks
+# -------------------------------------
+install_if_missing() {
+    if ! brew list "$1" &>/dev/null && ! brew list --cask "$1" &>/dev/null; then
+        log "📦 Installing $1..."
+        brew install "$1" || brew install --cask "$1"
+    else
+        log "✅ $1 already installed."
+    fi
+}
+
+# CLI tools
+install_if_missing openjdk@17
+install_if_missing nvm
+install_if_missing fvm
+
+# GUI apps
+install_if_missing visual-studio-code
+install_if_missing google-chrome
+
+# -------------------------------------
+# 4. Setup NVM
+# -------------------------------------
+log "📂 Ensuring NVM directory exists..."
+mkdir -p ~/.nvm
+
+# -------------------------------------
+# 5. Oh My Zsh
+# -------------------------------------
+log "💻 Checking Oh My Zsh..."
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    export RUNZSH=no
+    log "📥 Installing Oh My Zsh..."
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+else
+    log "✅ Oh My Zsh already installed."
+fi
+
+# -------------------------------------
+# 6. Powerlevel10k
+# -------------------------------------
+log "✨ Installing Powerlevel10k theme..."
+if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" ]; then
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
+        ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+else
+    log "✅ Powerlevel10k already installed."
+fi
+
+# -------------------------------------
+# 7. Oh My Zsh Plugins
+# -------------------------------------
+log "🔌 Installing Zsh plugins..."
+plugins_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
+
+[[ -d "$plugins_dir/zsh-syntax-highlighting" ]] || \
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$plugins_dir/zsh-syntax-highlighting"
+
+[[ -d "$plugins_dir/zsh-autosuggestions" ]] || \
+    git clone https://github.com/zsh-users/zsh-autosuggestions.git "$plugins_dir/zsh-autosuggestions"
+
+# -------------------------------------
+# 8. Generate .zshrc
+# -------------------------------------
+log "⚙️ Writing ~/.zshrc..."
+cat <<EOF > ~/.zshrc
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# Path to your oh-my-zsh installation.
+export ZSH="\$HOME/.oh-my-zsh"
+
+ZSH_THEME="powerlevel10k/powerlevel10k"
+plugins=(
+  git
+  zsh-syntax-highlighting
+  zsh-autosuggestions
+)
+source \$ZSH/oh-my-zsh.sh
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+# [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# Needed for zsh-autosuggestions
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+
+# NVM
+export NVM_DIR="\$HOME/.nvm"
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
+[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
+
+# nvm auto detect node version on cd
+# place this after nvm initialization!
+autoload -U add-zsh-hook
+
+load-nvmrc() {
+  local nvmrc_path
+  nvmrc_path="$(nvm_find_nvmrc)"
+
+  if [ -n "$nvmrc_path" ]; then
+    local nvmrc_node_version
+    nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
+
+    if [ "$nvmrc_node_version" = "N/A" ]; then
+      nvm install
+    elif [ "$nvmrc_node_version" != "$(nvm version)" ]; then
+      nvm use
+    fi
+  elif [ -n "$(PWD=$OLDPWD nvm_find_nvmrc)" ] && [ "$(nvm version)" != "$(nvm version default)" ]; then
+    echo "Reverting to nvm default version"
+    nvm use default
+  fi
+}
+
+add-zsh-hook chpwd load-nvmrc
+load-nvmrc
+
+# Java
+export JAVA_HOME=$(/usr/libexec/java_home -v17)
+export PATH="\$JAVA_HOME/bin:\$PATH"
+
+# Android/adb
+# Uncomment after Android Studio is installed
+# export PATH=$PATH:/Users/enigma/Library/Android/sdk/platform-tools/
+EOF
+
+log "✅ Setup complete."
+log "📝 Please change your terminal font to 'MesloLGS NF' manually."
+log "📝 Please install JetBrains Toolbox and Android Studio manually to enable adb commented export on .zshrc"
+log "🔄 Restart your terminal or run: source ~/.zshrc"
