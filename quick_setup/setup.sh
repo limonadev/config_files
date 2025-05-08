@@ -184,7 +184,7 @@ export JAVA_HOME=`/usr/libexec/java_home -v 17`
 
 # Android/adb
 # Uncomment after Android Studio is installed
-# export PATH=$PATH:/Users/enigma/Library/Android/sdk/platform-tools/
+# export PATH=$PATH:$HOME/Library/Android/sdk/platform-tools
 EOF
 
 
