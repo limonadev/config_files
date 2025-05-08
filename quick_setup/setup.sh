@@ -37,13 +37,13 @@ log "🔁 Updating Homebrew..."
 brew update
 
 # -------------------------------------
-# 4. Fonts (MesloLGS Nerd Font)
+# 3. Fonts (MesloLGS Nerd Font)
 # -------------------------------------
 log "🔤 Installing MesloLGS Nerd Font for Powerlevel10k..."
 brew install font-meslo-for-powerlevel10k
 
 # -------------------------------------
-# 5. Install CLI Tools & Casks
+# 4. Install CLI Tools & Casks
 # -------------------------------------
 install_if_missing() {
     if ! brew list "$1" &>/dev/null && ! brew list --cask "$1" &>/dev/null; then
@@ -78,13 +78,13 @@ else
 fi
 
 # -------------------------------------
-# 6. Setup NVM
+# 5. Setup NVM
 # -------------------------------------
 log "📂 Ensuring NVM directory exists..."
 mkdir -p ~/.nvm
 
 # -------------------------------------
-# 7. Oh My Zsh
+# 6. Oh My Zsh
 # -------------------------------------
 log "💻 Checking Oh My Zsh..."
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
@@ -96,7 +96,7 @@ else
 fi
 
 # -------------------------------------
-# 8. Powerlevel10k
+# 7. Powerlevel10k
 # -------------------------------------
 log "✨ Installing Powerlevel10k theme..."
 if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" ]; then
@@ -107,7 +107,7 @@ else
 fi
 
 # -------------------------------------
-# 9. Oh My Zsh Plugins
+# 8. Oh My Zsh Plugins
 # -------------------------------------
 log "🔌 Installing Zsh plugins..."
 plugins_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
@@ -118,13 +118,8 @@ plugins_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
 [[ -d "$plugins_dir/zsh-autosuggestions" ]] || \
     git clone https://github.com/zsh-users/zsh-autosuggestions.git "$plugins_dir/zsh-autosuggestions"
 
-log "✅ Setup complete."
-log "📝 Please change your terminal font to 'MesloLGS NF' manually."
-log "📝 Please install JetBrains Toolbox and Android Studio manually to enable adb commented export on .zshrc"
-log "🔄 Restart your terminal or run: source ~/.zshrc"
-
 # -------------------------------------
-# 3. Generate .zshrc
+# 9. Generate .zshrc
 # -------------------------------------
 log "⚙️ Writing ~/.zshrc..."
 cat <<'EOF' > ~/.zshrc
@@ -191,3 +186,10 @@ export PATH="\$JAVA_HOME/bin:\$PATH"
 # Uncomment after Android Studio is installed
 # export PATH=$PATH:/Users/enigma/Library/Android/sdk/platform-tools/
 EOF
+
+
+log "✅ Setup complete."
+log "📝 Please change your terminal font to 'MesloLGS NF' manually."
+log "📝 Please install JetBrains Toolbox and Android Studio manually to enable adb commented export on .zshrc"
+log "🔄 Uncomment the lines in the .zprofile file, only after brew and/or JetBrains Toolbox are installed
+log "🔄 Restart your terminal or run: source ~/.zshrc"
