@@ -40,8 +40,7 @@ brew update
 # 3. Fonts (MesloLGS Nerd Font)
 # -------------------------------------
 log "🔤 Installing MesloLGS Nerd Font for Powerlevel10k..."
-brew tap homebrew/cask-fonts
-brew install --cask font-meslo-lg-nerd-font
+brew install font-meslo-for-powerlevel10k
 
 # -------------------------------------
 # 4. Install CLI Tools & Casks
@@ -58,11 +57,25 @@ install_if_missing() {
 # CLI tools
 install_if_missing openjdk@17
 install_if_missing nvm
+brew tap leoafarias/fvm
 install_if_missing fvm
 
 # GUI apps
-install_if_missing visual-studio-code
-install_if_missing google-chrome
+# Check if Google Chrome is installed
+if [ ! -d "/Applications/Google Chrome.app" ]; then
+    echo "Google Chrome not found. Installing..."
+    brew install --cask google-chrome
+else
+    echo "Google Chrome is already installed."
+fi
+
+# Check if Visual Studio Code is installed
+if [ ! -d "/Applications/Visual Studio Code.app" ]; then
+    echo "Visual Studio Code not found. Installing..."
+    brew install --cask visual-studio-code
+else
+    echo "Visual Studio Code is already installed."
+fi
 
 # -------------------------------------
 # 4. Setup NVM
