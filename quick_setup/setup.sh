@@ -7,39 +7,39 @@ log() { echo -e "\033[1;32m$1\033[0m"; }
 # -------------------------------------
 # 1. Xcode Command Line Tools
 # -------------------------------------
-log "🔧 Checking Xcode Command Line Tools..."
+log ":wrench: Checking Xcode Command Line Tools..."
 if ! xcode-select -p &>/dev/null; then
     log "🛠 Installing Xcode Command Line Tools..."
     xcode-select --install
 
-    log "⌛ Waiting for installation to complete..."
+    log ":hourglass: Waiting for installation to complete..."
     until xcode-select -p &>/dev/null; do
         sleep 5
     done
-    log "✅ Xcode Command Line Tools installed."
+    log ":white_check_mark: Xcode Command Line Tools installed."
 else
-    log "✅ Xcode Command Line Tools already installed."
+    log ":white_check_mark: Xcode Command Line Tools already installed."
 fi
 
 # -------------------------------------
 # 2. Homebrew
 # -------------------------------------
-log "🍺 Checking Homebrew..."
+log ":beer: Checking Homebrew..."
 if ! command -v brew &>/dev/null; then
-    log "📥 Installing Homebrew..."
+    log ":inbox_tray: Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     eval "$(/opt/homebrew/bin/brew shellenv)"  # for Apple Silicon
 else
-    log "✅ Homebrew already installed."
+    log ":white_check_mark: Homebrew already installed."
 fi
 
-log "🔁 Updating Homebrew..."
+log ":repeat: Updating Homebrew..."
 brew update
 
 # -------------------------------------
 # 3. Fonts (MesloLGS Nerd Font)
 # -------------------------------------
-log "🔤 Installing MesloLGS Nerd Font for Powerlevel10k..."
+log ":abc: Installing MesloLGS Nerd Font for Powerlevel10k..."
 brew install font-meslo-for-powerlevel10k
 
 # -------------------------------------
@@ -47,15 +47,16 @@ brew install font-meslo-for-powerlevel10k
 # -------------------------------------
 install_if_missing() {
     if ! brew list "$1" &>/dev/null && ! brew list --cask "$1" &>/dev/null; then
-        log "📦 Installing $1..."
+        log ":package: Installing $1..."
         brew install "$1" || brew install --cask "$1"
     else
-        log "✅ $1 already installed."
+        log ":white_check_mark: $1 already installed."
     fi
 }
 
 # CLI tools
 install_if_missing openjdk@17
+sudo ln -sfn /opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-17.jdk
 install_if_missing nvm
 brew tap leoafarias/fvm
 install_if_missing fvm
@@ -80,36 +81,36 @@ fi
 # -------------------------------------
 # 5. Setup NVM
 # -------------------------------------
-log "📂 Ensuring NVM directory exists..."
+log ":open_file_folder: Ensuring NVM directory exists..."
 mkdir -p ~/.nvm
 
 # -------------------------------------
 # 6. Oh My Zsh
 # -------------------------------------
-log "💻 Checking Oh My Zsh..."
+log ":computer: Checking Oh My Zsh..."
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
     export RUNZSH=no
-    log "📥 Installing Oh My Zsh..."
+    log ":inbox_tray: Installing Oh My Zsh..."
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 else
-    log "✅ Oh My Zsh already installed."
+    log ":white_check_mark: Oh My Zsh already installed."
 fi
 
 # -------------------------------------
 # 7. Powerlevel10k
 # -------------------------------------
-log "✨ Installing Powerlevel10k theme..."
+log ":sparkles: Installing Powerlevel10k theme..."
 if [ ! -d "${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k" ]; then
     git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
         ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
 else
-    log "✅ Powerlevel10k already installed."
+    log ":white_check_mark: Powerlevel10k already installed."
 fi
 
 # -------------------------------------
 # 8. Oh My Zsh Plugins
 # -------------------------------------
-log "🔌 Installing Zsh plugins..."
+log ":electric_plug: Installing Zsh plugins..."
 plugins_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
 
 [[ -d "$plugins_dir/zsh-syntax-highlighting" ]] || \
@@ -121,7 +122,7 @@ plugins_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
 # -------------------------------------
 # 9. Generate .zshrc
 # -------------------------------------
-log "⚙️ Writing ~/.zshrc..."
+log ":gear: Writing ~/.zshrc..."
 cat <<'EOF' > ~/.zshrc
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
@@ -131,7 +132,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # Path to your oh-my-zsh installation.
-export ZSH="\$HOME/.oh-my-zsh"
+export ZSH="$HOME/.oh-my-zsh"
 
 ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(
@@ -139,16 +140,16 @@ plugins=(
   zsh-syntax-highlighting
   zsh-autosuggestions
 )
-source \$ZSH/oh-my-zsh.sh
+source $ZSH/oh-my-zsh.sh
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-# [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Needed for zsh-autosuggestions
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
 # NVM
-export NVM_DIR="\$HOME/.nvm"
+export NVM_DIR="$HOME/.nvm"
 [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
 [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
 
@@ -179,8 +180,7 @@ add-zsh-hook chpwd load-nvmrc
 load-nvmrc
 
 # Java
-export JAVA_HOME=$(/usr/libexec/java_home -v17)
-export PATH="\$JAVA_HOME/bin:\$PATH"
+export JAVA_HOME=`/usr/libexec/java_home -v 17`
 
 # Android/adb
 # Uncomment after Android Studio is installed
@@ -188,8 +188,8 @@ export PATH="\$JAVA_HOME/bin:\$PATH"
 EOF
 
 
-log "✅ Setup complete."
-log "📝 Please change your terminal font to 'MesloLGS NF' manually."
-log "📝 Please install JetBrains Toolbox and Android Studio manually to enable adb commented export on .zshrc"
-log "🔄 Uncomment the lines in the .zprofile file, only after brew and/or JetBrains Toolbox are installed
-log "🔄 Restart your terminal or run: source ~/.zshrc"
+log ":white_check_mark: Setup complete."
+log ":memo: Please change your terminal font to 'MesloLGS NF' manually."
+log ":memo: Please install JetBrains Toolbox and Android Studio manually to enable adb commented export on .zshrc"
+log ":arrows_counterclockwise: Uncomment the lines in the .zprofile file, only after brew and/or JetBrains Toolbox are installed"
+log ":arrows_counterclockwise: Restart your terminal or run: source ~/.zshrc"
