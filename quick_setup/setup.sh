@@ -61,21 +61,66 @@ install_if_missing nvm
 brew tap leoafarias/fvm
 install_if_missing fvm
 
-# GUI apps
-# Check if Google Chrome is installed
-if [ ! -d "/Applications/Google Chrome.app" ]; then
-    echo "Google Chrome not found. Installing..."
-    brew install --cask google-chrome
+# Ruby installation
+log "💎 Installing Ruby tools..."
+install_if_missing chruby
+install_if_missing ruby-install
+
+# Install Ruby 3.4.3 if not already installed
+log "💎 Checking Ruby 3.4.3 installation..."
+if [ ! -d "$HOME/.rubies/ruby-3.4.3" ]; then
+    log "📦 Installing Ruby 3.4.3..."
+    ruby-install ruby 3.4.3
 else
-    echo "Google Chrome is already installed."
+    log "✅ Ruby 3.4.3 already installed."
 fi
 
-# Check if Visual Studio Code is installed
-if [ ! -d "/Applications/Visual Studio Code.app" ]; then
-    echo "Visual Studio Code not found. Installing..."
-    brew install --cask visual-studio-code
+# mise installation
+log "🔧 Installing mise..."
+install_if_missing mise
+
+# GUI apps
+# Check if Brave Browser is installed
+if [ ! -d "/Applications/Brave Browser.app" ]; then
+    echo "Brave Browser not found. Installing..."
+    brew install --cask brave-browser
 else
-    echo "Visual Studio Code is already installed."
+    echo "Brave Browser is already installed."
+fi
+
+# Check if Cursor is installed
+if [ ! -d "/Applications/Cursor.app" ]; then
+    echo "Cursor not found. Installing..."
+    brew install --cask cursor
+else
+    echo "Cursor is already installed."
+fi
+
+# Check if Insomnia is installed
+if [ ! -d "/Applications/Insomnia.app" ]; then
+    echo "Insomnia not found. Installing..."
+    brew install --cask insomnia
+else
+    echo "Insomnia is already installed."
+fi
+
+# -------------------------------------
+# 4.1. Setup Cursor Settings
+# -------------------------------------
+log "⚙️ Setting up Cursor user settings..."
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CURSOR_SETTINGS_SOURCE="$SCRIPT_DIR/cursor/settings.json"
+CURSOR_USER_DIR="$HOME/Library/Application Support/Cursor/User"
+CURSOR_SETTINGS_TARGET="$CURSOR_USER_DIR/settings.json"
+
+if [ -f "$CURSOR_SETTINGS_SOURCE" ]; then
+    mkdir -p "$CURSOR_USER_DIR"
+    log "📋 Copying Cursor settings..."
+    cp "$CURSOR_SETTINGS_SOURCE" "$CURSOR_SETTINGS_TARGET"
+    log "✅ Cursor settings configured."
+else
+    log "⚠️  Cursor settings file not found at $CURSOR_SETTINGS_SOURCE"
 fi
 
 # -------------------------------------
@@ -178,6 +223,17 @@ load-nvmrc() {
 
 add-zsh-hook chpwd load-nvmrc
 load-nvmrc
+
+# [Ruby]
+# Use Homebrew's opt symlink which points to the current version
+if [ -f "/opt/homebrew/opt/chruby/share/chruby/chruby.sh" ]; then
+  source /opt/homebrew/opt/chruby/share/chruby/chruby.sh
+  source /opt/homebrew/opt/chruby/share/chruby/auto.sh
+  chruby 3.4.3
+fi
+
+# [mise]
+eval "$(mise activate zsh)"
 
 # Java
 export JAVA_HOME=`/usr/libexec/java_home -v 17`
