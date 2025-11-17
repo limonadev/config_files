@@ -1,10 +1,9 @@
 1. Download the repository
-2. Make sure all the files are in the $HOME directory
-3. Make the setup.sh file executable
+2. Make the setup.sh file executable
 
 ```
 chmod +x ~/setup.sh
 ```
 
-4. Run the setup.sh file
-5. Uncomment the lines in the .zprofile file, only after brew and/or JetBrains Toolbox are installed
+3. Run the setup.sh file
+4. Uncomment the lines in the .zprofile file, only after JetBrains Toolbox are installed

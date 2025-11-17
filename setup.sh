@@ -4,6 +4,9 @@ set -e
 
 log() { echo -e "\033[1;32m$1\033[0m"; }
 
+# Get the directory where this script is located (works from any location)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 # -------------------------------------
 # 1. Xcode Command Line Tools
 # -------------------------------------
@@ -41,6 +44,32 @@ brew update
 # -------------------------------------
 log "🔤 Installing MesloLGS Nerd Font for Powerlevel10k..."
 brew install font-meslo-for-powerlevel10k
+
+# -------------------------------------
+# 3.1. Configure Terminal Font
+# -------------------------------------
+log "⚙️ Configuring terminal font to 'MesloLGS NF'..."
+
+# Configure Terminal.app font
+if [ -d "/Applications/Utilities/Terminal.app" ]; then
+    log "📝 Setting font for Terminal.app..."
+    # Get the default profile name (usually "Basic" or "Pro")
+    DEFAULT_PROFILE=$(defaults read com.apple.Terminal "Default Window Settings" 2>/dev/null || echo "Basic")
+    
+    # Set the font for the default profile (font name is "MesloLGS NF" with space)
+    defaults write com.apple.Terminal "Window Settings.$DEFAULT_PROFILE" Font -string "MesloLGS NF"
+    defaults write com.apple.Terminal "Window Settings.$DEFAULT_PROFILE" FontSize -float 12.0
+    defaults write com.apple.Terminal "Window Settings.$DEFAULT_PROFILE" FontAntialias -bool true
+    
+    # Also set for all existing profiles
+    for profile in $(defaults read com.apple.Terminal "Window Settings" 2>/dev/null | grep -o '"[^"]*"' | tr -d '"'); do
+        defaults write com.apple.Terminal "Window Settings.$profile" Font -string "MesloLGS NF" 2>/dev/null
+        defaults write com.apple.Terminal "Window Settings.$profile" FontSize -float 12.0 2>/dev/null
+        defaults write com.apple.Terminal "Window Settings.$profile" FontAntialias -bool true 2>/dev/null
+    done
+    
+    log "✅ Terminal.app font configured (restart Terminal to see changes)."
+fi
 
 # -------------------------------------
 # 4. Install CLI Tools & Casks
@@ -96,6 +125,44 @@ else
     echo "Cursor is already installed."
 fi
 
+# Setup Cursor CLI command
+log "🔧 Setting up Cursor CLI command..."
+CURSOR_BIN="/Applications/Cursor.app/Contents/Resources/app/bin/cursor"
+
+if [ -f "$CURSOR_BIN" ]; then
+    # Determine the best location for the symlink
+    # Prefer /opt/homebrew/bin for Apple Silicon (no sudo needed)
+    # Fall back to /usr/local/bin (may need sudo)
+    if [ -d "/opt/homebrew/bin" ] && [ -w "/opt/homebrew/bin" ]; then
+        CURSOR_SYMLINK="/opt/homebrew/bin/cursor"
+        USE_SUDO=false
+    elif [ -d "/opt/homebrew/bin" ]; then
+        CURSOR_SYMLINK="/opt/homebrew/bin/cursor"
+        USE_SUDO=true
+    elif [ -w "/usr/local/bin" ]; then
+        CURSOR_SYMLINK="/usr/local/bin/cursor"
+        USE_SUDO=false
+    else
+        CURSOR_SYMLINK="/usr/local/bin/cursor"
+        USE_SUDO=true
+    fi
+    
+    # Create symlink if it doesn't exist or is broken
+    if [ ! -L "$CURSOR_SYMLINK" ] || [ ! -e "$CURSOR_SYMLINK" ]; then
+        log "📎 Creating symlink for cursor command at $CURSOR_SYMLINK..."
+        if [ "$USE_SUDO" = true ]; then
+            sudo ln -sf "$CURSOR_BIN" "$CURSOR_SYMLINK"
+        else
+            ln -sf "$CURSOR_BIN" "$CURSOR_SYMLINK"
+        fi
+        log "✅ Cursor CLI command installed at $CURSOR_SYMLINK"
+    else
+        log "✅ Cursor CLI command already set up at $CURSOR_SYMLINK"
+    fi
+else
+    log "⚠️  Cursor binary not found at $CURSOR_BIN"
+fi
+
 # Check if Insomnia is installed
 if [ ! -d "/Applications/Insomnia.app" ]; then
     echo "Insomnia not found. Installing..."
@@ -108,8 +175,6 @@ fi
 # 4.1. Setup Cursor Settings
 # -------------------------------------
 log "⚙️ Setting up Cursor user settings..."
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CURSOR_SETTINGS_SOURCE="$SCRIPT_DIR/cursor/settings.json"
 CURSOR_USER_DIR="$HOME/Library/Application Support/Cursor/User"
 CURSOR_SETTINGS_TARGET="$CURSOR_USER_DIR/settings.json"
@@ -121,6 +186,56 @@ if [ -f "$CURSOR_SETTINGS_SOURCE" ]; then
     log "✅ Cursor settings configured."
 else
     log "⚠️  Cursor settings file not found at $CURSOR_SETTINGS_SOURCE"
+fi
+
+# -------------------------------------
+# 4.2. Setup Git Configuration
+# -------------------------------------
+log "⚙️ Setting up Git configuration..."
+GITCONFIG_SOURCE="$SCRIPT_DIR/.gitconfig"
+GITCONFIG_TARGET="$HOME/.gitconfig"
+
+if [ -f "$GITCONFIG_SOURCE" ]; then
+    log "📋 Copying Git config..."
+    cp "$GITCONFIG_SOURCE" "$GITCONFIG_TARGET"
+    log "✅ Git configuration set up."
+else
+    log "⚠️  Git config file not found at $GITCONFIG_SOURCE"
+fi
+
+# -------------------------------------
+# 4.3. Setup SSH Configuration and Keys
+# -------------------------------------
+log "🔐 Setting up SSH configuration..."
+SSH_DIR="$HOME/.ssh"
+SSH_CONFIG_SOURCE="$SCRIPT_DIR/.ssh/config"
+SSH_CONFIG_TARGET="$SSH_DIR/config"
+
+# Create .ssh directory if it doesn't exist
+mkdir -p "$SSH_DIR"
+chmod 700 "$SSH_DIR"
+
+if [ -f "$SSH_CONFIG_SOURCE" ]; then
+    log "📋 Copying SSH config..."
+    cp "$SSH_CONFIG_SOURCE" "$SSH_CONFIG_TARGET"
+    chmod 600 "$SSH_CONFIG_TARGET"
+    log "✅ SSH configuration set up."
+else
+    log "⚠️  SSH config file not found at $SSH_CONFIG_SOURCE"
+fi
+
+# Generate SSH key if it doesn't exist
+SSH_KEY="$SSH_DIR/id_ed25519"
+if [ ! -f "$SSH_KEY" ]; then
+    log "🔑 Generating SSH key..."
+    ssh-keygen -t ed25519 -C "limonadev@gmail.com" -f "$SSH_KEY" -N ""
+    log "✅ SSH key generated at $SSH_KEY"
+    log "📋 Public key (add this to GitHub):"
+    cat "$SSH_KEY.pub"
+    log ""
+    log "🔗 Add your SSH key to GitHub: https://github.com/settings/keys"
+else
+    log "✅ SSH key already exists at $SSH_KEY"
 fi
 
 # -------------------------------------
@@ -163,6 +278,43 @@ plugins_dir="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins"
 
 [[ -d "$plugins_dir/zsh-autosuggestions" ]] || \
     git clone https://github.com/zsh-users/zsh-autosuggestions.git "$plugins_dir/zsh-autosuggestions"
+
+# -------------------------------------
+# 8.1. Copy Powerlevel10k Configuration
+# -------------------------------------
+log "⚙️ Setting up Powerlevel10k configuration..."
+P10K_SOURCE="$SCRIPT_DIR/.p10k.zsh"
+P10K_TARGET="$HOME/.p10k.zsh"
+
+if [ -f "$P10K_SOURCE" ]; then
+    log "📋 Copying Powerlevel10k config..."
+    cp "$P10K_SOURCE" "$P10K_TARGET"
+    log "✅ Powerlevel10k configuration set up."
+else
+    log "⚠️  Powerlevel10k config file not found at $P10K_SOURCE"
+fi
+
+# -------------------------------------
+# 8.2. Copy .zprofile and add brew line
+# -------------------------------------
+log "⚙️ Setting up .zprofile..."
+ZPROFILE_SOURCE="$SCRIPT_DIR/.zprofile"
+ZPROFILE_TARGET="$HOME/.zprofile"
+
+if [ -f "$ZPROFILE_SOURCE" ]; then
+    log "📋 Copying .zprofile..."
+    cp "$ZPROFILE_SOURCE" "$ZPROFILE_TARGET"
+    # Add brew line since brew is installed during this script
+    if ! grep -q "eval \"\$(/opt/homebrew/bin/brew shellenv)\"" "$ZPROFILE_TARGET"; then
+        log "🍺 Adding brew line to .zprofile..."
+        echo "" >> "$ZPROFILE_TARGET"
+        echo "# Added for brew" >> "$ZPROFILE_TARGET"
+        echo "eval \"\$(/opt/homebrew/bin/brew shellenv)\"" >> "$ZPROFILE_TARGET"
+    fi
+    log "✅ .zprofile set up (brew line added)."
+else
+    log "⚠️  .zprofile file not found at $ZPROFILE_SOURCE"
+fi
 
 # -------------------------------------
 # 9. Generate .zshrc
@@ -238,14 +390,113 @@ eval "$(mise activate zsh)"
 # Java
 export JAVA_HOME=`/usr/libexec/java_home -v 17`
 
+# Flutter web debugging with Brave Browser
+export CHROME_EXECUTABLE="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+
 # Android/adb
 # Uncomment after Android Studio is installed
 # export PATH=$PATH:$HOME/Library/Android/sdk/platform-tools
 EOF
 
+# -------------------------------------
+# 10. Install additional tools after .zshrc is set up
+# -------------------------------------
+log "📦 Installing additional tools (sourcing .zshrc for environment)..."
+
+# Source .zshrc to get all environment variables
+source ~/.zshrc
+
+# Install CocoaPods with Ruby
+log "📦 Installing CocoaPods..."
+if command -v gem &>/dev/null && command -v chruby &>/dev/null; then
+    if ! command -v pod &>/dev/null; then
+        gem install cocoapods
+        log "✅ CocoaPods installed."
+    else
+        log "✅ CocoaPods already installed."
+    fi
+else
+    log "⚠️  Ruby/gem not available, skipping CocoaPods installation"
+fi
+
+# Install Flutter with fvm
+log "📦 Installing Flutter with fvm..."
+if command -v fvm &>/dev/null; then
+    fvm install stable
+    log "✅ Flutter stable installed via fvm."
+else
+    log "⚠️  fvm not available, skipping Flutter installation"
+fi
+
+# Install Flutter and Dart with mise (latest stable versions)
+log "📦 Installing Flutter and Dart with mise (stable versions)..."
+if command -v mise &>/dev/null; then
+    # Try @stable first, fallback to @latest if @stable not supported
+    if mise install flutter@stable 2>/dev/null; then
+        log "✅ Flutter stable installed via mise."
+    else
+        # @stable might not be supported, use @latest which should be stable
+        mise install flutter@latest
+        log "✅ Flutter latest installed via mise."
+    fi
+    
+    if mise install dart@stable 2>/dev/null; then
+        log "✅ Dart stable installed via mise."
+    else
+        # @stable might not be supported, use @latest which should be stable
+        mise install dart@latest
+        log "✅ Dart latest installed via mise."
+    fi
+else
+    log "⚠️  mise not available, skipping Flutter/Dart installation"
+fi
+
+# Install Cursor Extensions
+log "🔌 Installing Cursor extensions..."
+CURSOR_EXTENSIONS_SOURCE="$SCRIPT_DIR/cursor/extensions.txt"
+
+if [ -f "$CURSOR_EXTENSIONS_SOURCE" ]; then
+    # Check if cursor CLI is available
+    if command -v cursor &>/dev/null && cursor --version &>/dev/null; then
+        log "📦 Installing extensions from extensions.txt..."
+        installed_count=0
+        skipped_count=0
+        
+        while IFS= read -r extension || [ -n "$extension" ]; do
+            # Skip empty lines and comments
+            [[ -z "$extension" || "$extension" =~ ^[[:space:]]*# ]] && continue
+            
+            # Trim whitespace
+            extension=$(echo "$extension" | xargs)
+            [[ -z "$extension" ]] && continue
+            
+            log "  📦 Installing $extension..."
+            if cursor --install-extension "$extension" &>/dev/null; then
+                ((installed_count++))
+            else
+                log "  ⚠️  Failed to install $extension (may already be installed)"
+                ((skipped_count++))
+            fi
+        done < "$CURSOR_EXTENSIONS_SOURCE"
+        
+        log "✅ Installed $installed_count extension(s), $skipped_count skipped/failed."
+    else
+        log "⚠️  Cursor CLI not available. The symlink may need a moment to be recognized."
+        log "   Try running: source ~/.zshrc or restart your terminal"
+    fi
+else
+    if [ ! -f "$CURSOR_EXTENSIONS_SOURCE" ]; then
+        log "⚠️  Extensions file not found at $CURSOR_EXTENSIONS_SOURCE"
+        log "   To export extensions: cursor --list-extensions > cursor/extensions.txt"
+    fi
+fi
 
 log "✅ Setup complete."
-log "📝 Please change your terminal font to 'MesloLGS NF' manually."
+log "📝 Terminal font has been configured. Restart your terminal to see the changes."
 log "📝 Please install JetBrains Toolbox and Android Studio manually to enable adb commented export on .zshrc"
-log "🔄 Uncomment the lines in the .zprofile file, only after brew and/or JetBrains Toolbox are installed"
+log "🔄 Uncomment the JetBrains Toolbox line in .zprofile after installing JetBrains Toolbox"
 log "🔄 Restart your terminal or run: source ~/.zshrc"
+log ""
+log "🐙 GitHub Setup:"
+log "   - Git config and SSH config have been set up"
+log "   - If an SSH key was generated, add it to GitHub: https://github.com/settings/keys"
