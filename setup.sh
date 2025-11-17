@@ -91,6 +91,7 @@ install_if_missing() {
 
 # CLI tools
 install_if_missing openjdk@17
+log "🔧 We need to install OpenJDK 17 for Java. We will need to enter your sudo password to complete the installation."
 sudo ln -sfn /opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk-17.jdk
 install_if_missing nvm
 brew tap leoafarias/fvm
@@ -477,10 +478,23 @@ if [ -f "$CURSOR_EXTENSIONS_SOURCE" ]; then
             [[ -z "$extension" ]] && continue
             
             log "  📦 Installing $extension..."
-            if cursor --install-extension "$extension" &>/dev/null; then
+            # Capture both stdout and stderr to see what's happening
+            output=$(cursor --install-extension "$extension" 2>&1)
+            exit_code=$?
+            
+            # Check output for success indicators (some commands return non-zero even on success)
+            if [ $exit_code -eq 0 ] || echo "$output" | grep -qiE "installed|already installed|is already installed|successfully"; then
                 ((installed_count++))
+                if echo "$output" | grep -qi "already installed\|is already installed"; then
+                    log "  ✅ $extension (already installed)"
+                else
+                    log "  ✅ $extension installed"
+                fi
             else
-                log "  ⚠️  Failed to install $extension (may already be installed)"
+                log "  ⚠️  Failed to install $extension"
+                if [ -n "$output" ]; then
+                    log "  Error: $output"
+                fi
                 ((skipped_count++))
             fi
         done < "$CURSOR_EXTENSIONS_SOURCE"
