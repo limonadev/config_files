@@ -43,7 +43,13 @@ brew update
 # 3. Fonts (MesloLGS Nerd Font)
 # -------------------------------------
 log "🔤 Installing MesloLGS Nerd Font for Powerlevel10k..."
-brew install font-meslo-for-powerlevel10k
+if brew list --cask font-meslo-for-powerlevel10k &>/dev/null; then
+    log "✅ MesloLGS Nerd Font already installed."
+else
+    brew install --cask font-meslo-for-powerlevel10k || {
+        log "⚠️  Font installation had issues (may already be installed), continuing..."
+    }
+fi
 
 # -------------------------------------
 # 3.1. Configure Terminal Font
