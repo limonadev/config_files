@@ -1,5 +1,0 @@
-[user]
-	name = limonadev
-	email = limonadev@gmail.com
-#[includeIf "gitdir:/Users/my_user/Code/Work/"]
-#  path = /Users/my_user/Code/Work/.gitconfig_workplace
