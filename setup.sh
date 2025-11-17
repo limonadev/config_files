@@ -43,12 +43,18 @@ brew update
 # 3. Fonts (MesloLGS Nerd Font)
 # -------------------------------------
 log "🔤 Installing MesloLGS Nerd Font for Powerlevel10k..."
+FONT_INSTALLED=false
 if brew list --cask font-meslo-for-powerlevel10k &>/dev/null; then
-    log "✅ MesloLGS Nerd Font already installed."
+    log "✅ MesloLGS Nerd Font cask installed."
+    FONT_INSTALLED=true
 else
     brew install --cask font-meslo-for-powerlevel10k || {
         log "⚠️  Font installation had issues (may already be installed), continuing..."
     }
+    # Check if font files are actually present
+    if [ -f "$HOME/Library/Fonts/MesloLGS NF Regular.ttf" ]; then
+        FONT_INSTALLED=true
+    fi
 fi
 
 # -------------------------------------
@@ -56,25 +62,60 @@ fi
 # -------------------------------------
 log "⚙️ Configuring terminal font to 'MesloLGS NF'..."
 
-# Configure Terminal.app font
-if [ -d "/Applications/Utilities/Terminal.app" ]; then
+# Configure Terminal.app font (only if font is installed)
+if [ "$FONT_INSTALLED" = true ] && ([ -d "/Applications/Utilities/Terminal.app" ] || [ -d "/System/Applications/Utilities/Terminal.app" ]); then
     log "📝 Setting font for Terminal.app..."
     # Get the default profile name (usually "Basic" or "Pro")
     DEFAULT_PROFILE=$(defaults read com.apple.Terminal "Default Window Settings" 2>/dev/null || echo "Basic")
     
-    # Set the font for the default profile (font name is "MesloLGS NF" with space)
-    defaults write com.apple.Terminal "Window Settings.$DEFAULT_PROFILE" Font -string "MesloLGS NF"
-    defaults write com.apple.Terminal "Window Settings.$DEFAULT_PROFILE" FontSize -float 12.0
-    defaults write com.apple.Terminal "Window Settings.$DEFAULT_PROFILE" FontAntialias -bool true
+    # Use AppleScript to set the font (works even if Terminal isn't running)
+    # Try to set for Basic profile first
+    osascript <<'APPLESCRIPT' 2>/dev/null || true
+tell application "Terminal"
+    try
+        set default settings to settings set "Basic"
+        set font name of default settings to "MesloLGS NF"
+        set font size of default settings to 12
+    end try
+end tell
+APPLESCRIPT
     
-    # Also set for all existing profiles
-    for profile in $(defaults read com.apple.Terminal "Window Settings" 2>/dev/null | grep -o '"[^"]*"' | tr -d '"'); do
-        defaults write com.apple.Terminal "Window Settings.$profile" Font -string "MesloLGS NF" 2>/dev/null
-        defaults write com.apple.Terminal "Window Settings.$profile" FontSize -float 12.0 2>/dev/null
-        defaults write com.apple.Terminal "Window Settings.$profile" FontAntialias -bool true 2>/dev/null
-    done
+    # Also set for the actual default profile if different
+    if [ -n "$DEFAULT_PROFILE" ] && [ "$DEFAULT_PROFILE" != "Basic" ]; then
+        osascript <<APPLESCRIPT 2>/dev/null || true
+tell application "Terminal"
+    try
+        set default settings to settings set "$DEFAULT_PROFILE"
+        set font name of default settings to "MesloLGS NF"
+        set font size of default settings to 12
+    end try
+end tell
+APPLESCRIPT
+    fi
     
-    log "✅ Terminal.app font configured (restart Terminal to see changes)."
+    # Also try setting for all profiles using a loop
+    osascript <<'APPLESCRIPT' 2>/dev/null || true
+tell application "Terminal"
+    try
+        repeat with profileName in (get name of every settings set)
+            try
+                set current settings to settings set profileName
+                set font name of current settings to "MesloLGS NF"
+                set font size of current settings to 12
+            end try
+        end repeat
+    end try
+end tell
+APPLESCRIPT
+    
+    log "✅ Terminal.app font configured via AppleScript."
+    log "⚠️  You must restart Terminal.app for font changes to take effect."
+elif [ "$FONT_INSTALLED" = false ]; then
+    log "⚠️  Font not installed, skipping Terminal font configuration."
+    log "   Install the font first, then manually configure Terminal:"
+    log "   Terminal > Settings > Profiles > Text > Font > Select 'MesloLGS NF'"
+else
+    log "⚠️  Terminal.app not found, skipping font configuration."
 fi
 
 # -------------------------------------
