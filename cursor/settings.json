@@ -1,0 +1,50 @@
+{
+  "workbench.colorTheme": "Default Dark+",
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.editor.enablePreview": true,
+  "git.mergeEditor": false,
+  "diffEditor.ignoreTrimWhitespace": false,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[dart]": {
+    "editor.formatOnType": true,
+    "editor.rulers": [80]
+  },
+  "dart.runPubGetOnPubspecChanges": "prompt",
+  "dart.debugExternalPackageLibraries": false,
+  "dart.debugSdkLibraries": true,
+  "files.associations": {
+    "*.arb": "json"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[plaintext]": {
+    "editor.wordWrap": "on"
+  },
+  "files.insertFinalNewline": true,
+  "editor.formatOnSave": true,
+  "editor.fontSize": 18,
+  "workbench.activityBar.orientation": "vertical",
+  "dart.checkForSdkUpdates": false,
+  "[dockercompose]": {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.autoIndent": "advanced",
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[github-actions-workflow]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "cursor.general.disableHttp2": true
+}

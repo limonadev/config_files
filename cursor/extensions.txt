@@ -1,0 +1,9 @@
+dart-code.dart-code
+dart-code.flutter
+eamodio.gitlens
+esbenp.prettier-vscode
+gruntfuggly.todo-tree
+localizely.flutter-intl
+pkief.material-icon-theme
+redhat.vscode-yaml
+yoavbls.pretty-ts-errors
