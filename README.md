@@ -7,7 +7,23 @@
 
 ## Setup Steps
 
-1. **Clone the repository from GitHub:**
+1. **Download the repository:**
+
+   **Option A: Download as ZIP (no git required):**
+
+   ```bash
+   # Download the repository as a ZIP file
+   curl -L -o config_files.zip https://github.com/limonadev/config_files/archive/main.zip
+
+   # Extract the ZIP file
+   unzip config_files.zip
+
+   # Rename the extracted folder and navigate into it
+   mv config_files-main config_files
+   cd config_files
+   ```
+
+   **Option B: Clone with git (requires Xcode Command Line Tools):**
 
    ```bash
    git clone https://github.com/limonadev/config_files.git

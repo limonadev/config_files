@@ -421,16 +421,39 @@ EOF
 # -------------------------------------
 # 10. Install additional tools after .zshrc is set up
 # -------------------------------------
-log "📦 Installing additional tools (sourcing .zshrc for environment)..."
+log "📦 Installing additional tools (setting up environment)..."
 
-# Source .zshrc to get all environment variables
-source ~/.zshrc
+# Manually set up environment variables that would normally come from .zshrc
+# This avoids sourcing .zshrc which can cause the script to exit
+
+# Set up Ruby/chruby
+if [ -f "/opt/homebrew/opt/chruby/share/chruby/chruby.sh" ]; then
+    source /opt/homebrew/opt/chruby/share/chruby/chruby.sh
+    source /opt/homebrew/opt/chruby/share/chruby/auto.sh
+    chruby 3.4.3
+    # Update PATH to include Ruby binaries
+    export PATH="$HOME/.rubies/ruby-3.4.3/bin:$PATH"
+fi
+
+# Activate mise
+if command -v mise &>/dev/null; then
+    eval "$(mise activate zsh)"
+fi
+
+# Set Java HOME
+export JAVA_HOME=$(/usr/libexec/java_home -v 17 2>/dev/null || echo "")
+
+# Set Chrome executable for Flutter
+export CHROME_EXECUTABLE="/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
 
 # Install CocoaPods with Ruby
 log "📦 Installing CocoaPods..."
-if command -v gem &>/dev/null && command -v chruby &>/dev/null; then
+# Check for gem after setting up chruby - gem should be available if Ruby is set up
+if command -v gem &>/dev/null || [ -f "$HOME/.rubies/ruby-3.4.3/bin/gem" ]; then
+    # Use full path if gem is not in PATH
+    GEM_CMD=$(command -v gem 2>/dev/null || echo "$HOME/.rubies/ruby-3.4.3/bin/gem")
     if ! command -v pod &>/dev/null; then
-        gem install cocoapods
+        $GEM_CMD install cocoapods
         log "✅ CocoaPods installed."
     else
         log "✅ CocoaPods already installed."
