@@ -195,6 +195,19 @@ else
     log "⚠️  Cursor settings file not found at $CURSOR_SETTINGS_SOURCE"
 fi
 
+# Setup Cursor Keybindings
+log "⌨️  Setting up Cursor keybindings..."
+CURSOR_KEYBINDINGS_SOURCE="$SCRIPT_DIR/cursor/keybindings.json"
+CURSOR_KEYBINDINGS_TARGET="$CURSOR_USER_DIR/keybindings.json"
+
+if [ -f "$CURSOR_KEYBINDINGS_SOURCE" ]; then
+    log "📋 Copying Cursor keybindings..."
+    cp "$CURSOR_KEYBINDINGS_SOURCE" "$CURSOR_KEYBINDINGS_TARGET"
+    log "✅ Cursor keybindings configured."
+else
+    log "ℹ️  No keybindings.json found (optional - create cursor/keybindings.json to customize shortcuts)"
+fi
+
 # -------------------------------------
 # 4.2. Setup Git Configuration
 # -------------------------------------

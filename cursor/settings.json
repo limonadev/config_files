@@ -1,4 +1,5 @@
 {
+  "workbench.colorTheme": "Default Dark+",
   "workbench.iconTheme": "material-icon-theme",
   "workbench.editor.enablePreview": true,
   "git.mergeEditor": false,
