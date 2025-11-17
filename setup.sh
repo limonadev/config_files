@@ -478,9 +478,11 @@ if [ -f "$CURSOR_EXTENSIONS_SOURCE" ]; then
             [[ -z "$extension" ]] && continue
             
             log "  📦 Installing $extension..."
-            # Capture both stdout and stderr to see what's happening
+            # Capture both stdout and stderr, and don't let failures stop the script
+            set +e  # Temporarily disable exit on error for this command
             output=$(cursor --install-extension "$extension" 2>&1)
             exit_code=$?
+            set -e  # Re-enable exit on error
             
             # Check output for success indicators (some commands return non-zero even on success)
             if [ $exit_code -eq 0 ] || echo "$output" | grep -qiE "installed|already installed|is already installed|successfully"; then
@@ -491,12 +493,18 @@ if [ -f "$CURSOR_EXTENSIONS_SOURCE" ]; then
                     log "  ✅ $extension installed"
                 fi
             else
-                log "  ⚠️  Failed to install $extension"
+                log "  ⚠️  Failed to install $extension (exit code: $exit_code)"
                 if [ -n "$output" ]; then
-                    log "  Error: $output"
+                    # Show first few lines of output to avoid spam
+                    echo "$output" | head -3 | while IFS= read -r line; do
+                        log "     $line"
+                    done
                 fi
                 ((skipped_count++))
             fi
+            
+            # Small delay between installations to avoid rate limiting
+            sleep 1
         done < "$CURSOR_EXTENSIONS_SOURCE"
         
         log "✅ Installed $installed_count extension(s), $skipped_count skipped/failed."
