@@ -469,20 +469,25 @@ if [ -f "$CURSOR_EXTENSIONS_SOURCE" ]; then
         installed_count=0
         skipped_count=0
         
-        while IFS= read -r extension || [ -n "$extension" ]; do
+        # Read all extensions into an array first
+        extensions=()
+        while IFS= read -r line || [ -n "$line" ]; do
             # Skip empty lines and comments
-            [[ -z "$extension" || "$extension" =~ ^[[:space:]]*# ]] && continue
-            
-            # Trim whitespace
-            extension=$(echo "$extension" | xargs)
-            [[ -z "$extension" ]] && continue
-            
+            [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+            # Trim whitespace and add to array
+            trimmed=$(echo "$line" | xargs)
+            [[ -n "$trimmed" ]] && extensions+=("$trimmed")
+        done < "$CURSOR_EXTENSIONS_SOURCE"
+        
+        log "Found ${#extensions[@]} extension(s) to install"
+        
+        # Disable exit on error for the entire extension installation loop
+        set +e
+        for extension in "${extensions[@]}"; do
             log "  📦 Installing $extension..."
-            # Capture both stdout and stderr, and don't let failures stop the script
-            set +e  # Temporarily disable exit on error for this command
+            # Capture both stdout and stderr
             output=$(cursor --install-extension "$extension" 2>&1)
             exit_code=$?
-            set -e  # Re-enable exit on error
             
             # Check output for success indicators (some commands return non-zero even on success)
             if [ $exit_code -eq 0 ] || echo "$output" | grep -qiE "installed|already installed|is already installed|successfully"; then
@@ -505,7 +510,8 @@ if [ -f "$CURSOR_EXTENSIONS_SOURCE" ]; then
             
             # Small delay between installations to avoid rate limiting
             sleep 1
-        done < "$CURSOR_EXTENSIONS_SOURCE"
+        done
+        set -e  # Re-enable exit on error after the loop
         
         log "✅ Installed $installed_count extension(s), $skipped_count skipped/failed."
     else
