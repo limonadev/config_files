@@ -1,10 +1,5 @@
 [user]
 	name = limonadev
 	email = limonadev@gmail.com
-
-[includeIf "gitdir:/home/limonadev/Code/Tul/"]
-  path = /home/limonadev/Code/Tul/.gitconfig-tul
-[safe]
-	directory = /opt/flutter
-[credential]
-	helper = store
+#[includeIf "gitdir:/Users/my_user/Code/Work/"]
+#  path = /Users/my_user/Code/Work/.gitconfig_workplace
